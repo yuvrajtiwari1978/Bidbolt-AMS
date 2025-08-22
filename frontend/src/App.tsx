@@ -12,6 +12,7 @@ import Wallet from './pages/Wallet';
 import Watchlist from './pages/Watchlist';
 import Notifications from './pages/Notifications';
 import Settings from './pages/Settings';
+import Register from './pages/Register';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
             <Route path="notifications" element={<Notifications />} />
             <Route path="settings" element={<Settings />} />
           </Route>
+          <Route path="/register" element={<Register />} />
         </Routes>
       </Router>
       <Toaster

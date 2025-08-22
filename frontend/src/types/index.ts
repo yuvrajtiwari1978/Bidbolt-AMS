@@ -38,8 +38,10 @@ export interface Bid {
 
 export interface User {
   id: string;
-  name: string;
+  username: string;
   email: string;
+  firstName: string;
+  lastName: string;
   avatar: string;
   rating: number;
   joinDate: Date;
@@ -50,6 +52,8 @@ export interface User {
   sellingItems: string[];
   purchasedItems: string[];
   address?: Address;
+  role?: string;
+  isActive?: boolean;
 }
 
 export interface Wallet {

@@ -1,6 +1,95 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
+const transactionSchema = new mongoose.Schema({
+  id: {
+    type: String,
+    required: true
+  },
+  type: {
+    type: String,
+    enum: ['deposit', 'withdrawal', 'bid', 'refund', 'payment', 'earning'],
+    required: true
+  },
+  amount: {
+    type: Number,
+    required: true
+  },
+  description: {
+    type: String,
+    required: true
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'completed', 'failed'],
+    default: 'pending'
+  },
+  relatedAuctionId: {
+    type: String,
+    default: null
+  }
+});
+
+const paymentMethodSchema = new mongoose.Schema({
+  id: {
+    type: String,
+    required: true
+  },
+  type: {
+    type: String,
+    enum: ['card', 'bank'],
+    required: true
+  },
+  last4: {
+    type: String,
+    required: true
+  },
+  brand: {
+    type: String,
+    default: null
+  },
+  isDefault: {
+    type: Boolean,
+    default: false
+  }
+});
+
+const notificationSchema = new mongoose.Schema({
+  id: {
+    type: String,
+    required: true
+  },
+  type: {
+    type: String,
+    enum: ['bid_outbid', 'auction_ending', 'auction_won', 'auction_lost', 'payment_received', 'withdrawal_completed'],
+    required: true
+  },
+  title: {
+    type: String,
+    required: true
+  },
+  message: {
+    type: String,
+    required: true
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now
+  },
+  read: {
+    type: Boolean,
+    default: false
+  },
+  actionUrl: {
+    type: String,
+    default: null
+  }
+});
+
 const userSchema = new mongoose.Schema({
   username: {
     type: String,
@@ -37,7 +126,7 @@ const userSchema = new mongoose.Schema({
   },
   avatar: {
     type: String,
-    default: null
+    default: 'https://via.placeholder.com/150'
   },
   isActive: {
     type: Boolean,
@@ -48,9 +137,72 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'admin'],
     default: 'user'
   },
-  walletAddress: {
+  rating: {
+    type: Number,
+    default: 5.0,
+    min: 0,
+    max: 5
+  },
+  joinDate: {
+    type: Date,
+    default: Date.now
+  },
+  watchlist: [{
     type: String,
-    default: null
+    default: []
+  }],
+  bidHistory: [{
+    auctionId: String,
+    amount: Number,
+    timestamp: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  notifications: [notificationSchema],
+  wallet: {
+    balance: {
+      type: Number,
+      default: 1000.00,
+      min: 0
+    },
+    pendingBalance: {
+      type: Number,
+      default: 0.00,
+      min: 0
+    },
+    transactions: [transactionSchema],
+    paymentMethods: [paymentMethodSchema]
+  },
+  sellingItems: [{
+    type: String,
+    default: []
+  }],
+  purchasedItems: [{
+    type: String,
+    default: []
+  }],
+  address: {
+    street: {
+      type: String,
+      default: ''
+    },
+    city: {
+      type: String,
+      default: ''
+    },
+    state: {
+      type: String,
+      default: ''
+    },
+    zipCode: {
+      type: String,
+      default: ''
+    },
+    country: {
+      type: String,
+      default: 'India'
+    }
   },
   preferences: {
     notifications: {

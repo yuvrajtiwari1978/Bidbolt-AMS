@@ -82,4 +82,40 @@ export const auctionAPI = {
   getRelatedAuctions: (auctionId: string) => api.get(`/auctions/related/${auctionId}`),
 };
 
+// Wallet API calls
+export const walletAPI = {
+  // Get wallet details
+  getWallet: () => api.get('/wallet'),
+  
+  // Deposit funds
+  depositFunds: (amount: number, paymentMethodId?: string) => 
+    api.post('/wallet/deposit', { amount, paymentMethodId }),
+  
+  // Withdraw funds
+  withdrawFunds: (amount: number, paymentMethodId?: string) => 
+    api.post('/wallet/withdraw', { amount, paymentMethodId }),
+  
+  // Get transaction history
+  getTransactions: (params?: {
+    page?: number;
+    limit?: number;
+    type?: string;
+  }) => api.get('/wallet/transactions', { params }),
+  
+  // Add payment method
+  addPaymentMethod: (paymentMethod: {
+    type: string;
+    last4: string;
+    brand?: string;
+  }) => api.post('/wallet/payment-methods', paymentMethod),
+  
+  // Remove payment method
+  removePaymentMethod: (paymentMethodId: string) => 
+    api.delete(`/wallet/payment-methods/${paymentMethodId}`),
+  
+  // Set default payment method
+  setDefaultPaymentMethod: (paymentMethodId: string) => 
+    api.put('/wallet/payment-methods/default', { paymentMethodId }),
+};
+
 export default api;

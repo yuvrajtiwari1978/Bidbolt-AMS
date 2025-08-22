@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { CreditCard, Plus, Minus, ArrowUpRight, ArrowDownLeft, Clock, CheckCircle, XCircle, Wallet as WalletIcon, TrendingUp, DollarSign } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { Transaction } from '../types';
 import toast from 'react-hot-toast';
+import { walletAPI } from '../services/api';
+import LoginButton from '../components/LoginButton';
 
 const Wallet: React.FC = () => {
   const { state, dispatch } = useApp();
@@ -17,52 +18,50 @@ const Wallet: React.FC = () => {
       <div className="px-6">
         <div className="max-w-4xl mx-auto text-center py-16">
           <h2 className="text-2xl font-bold text-white mb-4">Please log in to access your wallet</h2>
+          <p className="text-white/60 mb-6">Login to manage your funds and payment methods</p>
+          <LoginButton size="lg" variant="primary" />
         </div>
       </div>
     );
   }
 
-  const handleDeposit = () => {
+  const handleDeposit = async () => {
     const amount = parseFloat(depositAmount);
     if (amount > 0) {
-      const newBalance = state.user!.wallet.balance + amount;
-      const transaction: Transaction = {
-        id: `t${Date.now()}`,
-        type: 'deposit',
-        amount: amount,
-        description: `Wallet deposit via credit card`,
-        timestamp: new Date(),
-        status: 'completed'
-      };
-
-      dispatch({ type: 'UPDATE_WALLET_BALANCE', payload: newBalance });
-      dispatch({ type: 'ADD_TRANSACTION', payload: transaction });
-      
-      setDepositAmount('');
-      setShowDepositModal(false);
-      toast.success(`₹${amount} deposited successfully!`);
+      try {
+        const response = await walletAPI.depositFunds(amount);
+        const { balance, transaction } = response.data.data;
+        
+        dispatch({ type: 'UPDATE_WALLET_BALANCE', payload: balance });
+        dispatch({ type: 'ADD_TRANSACTION', payload: transaction });
+        
+        setDepositAmount('');
+        setShowDepositModal(false);
+        toast.success(`₹${amount} deposited successfully!`);
+      } catch (error) {
+        console.error('Failed to deposit funds:', error);
+        toast.error('Failed to deposit funds');
+      }
     }
   };
 
-  const handleWithdraw = () => {
+  const handleWithdraw = async () => {
     const amount = parseFloat(withdrawAmount);
     if (amount > 0 && amount <= state.user!.wallet.balance) {
-      const newBalance = state.user!.wallet.balance - amount;
-      const transaction: Transaction = {
-        id: `t${Date.now()}`,
-        type: 'withdrawal',
-        amount: -amount,
-        description: `Withdrawal to bank account`,
-        timestamp: new Date(),
-        status: 'pending'
-      };
-
-      dispatch({ type: 'UPDATE_WALLET_BALANCE', payload: newBalance });
-      dispatch({ type: 'ADD_TRANSACTION', payload: transaction });
-      
-      setWithdrawAmount('');
-      setShowWithdrawModal(false);
-      toast.success(`₹${amount} withdrawal initiated!`);
+      try {
+        const response = await walletAPI.withdrawFunds(amount);
+        const { balance, transaction } = response.data.data;
+        
+        dispatch({ type: 'UPDATE_WALLET_BALANCE', payload: balance });
+        dispatch({ type: 'ADD_TRANSACTION', payload: transaction });
+        
+        setWithdrawAmount('');
+        setShowWithdrawModal(false);
+        toast.success(`₹${amount} withdrawal initiated!`);
+      } catch (error) {
+        console.error('Failed to withdraw funds:', error);
+        toast.error('Failed to withdraw funds');
+      }
     } else {
       toast.error('Invalid withdrawal amount');
     }

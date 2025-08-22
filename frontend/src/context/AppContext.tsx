@@ -1,13 +1,10 @@
 import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
-import { AuctionItem } from '../types';
+import { AuctionItem, User, Transaction, PaymentMethod } from '../types';
 import toast from 'react-hot-toast';
-import { auctionAPI } from '../services/api';
+import { auctionAPI, userAPI } from '../services/api';
 
 interface AppState {
-  user?: {
-    notifications: { read: boolean }[];
-    wallet: { balance: number };
-  };
+  user?: User;
   watchlist: AuctionItem[];
   auctions: AuctionItem[];
   searchQuery: string;
@@ -17,16 +14,22 @@ interface AppState {
 }
 
 type AppAction =
+  | { type: 'SET_USER'; payload: User }
+  | { type: 'UPDATE_USER'; payload: Partial<User> }
   | { type: 'SET_AUCTIONS'; payload: AuctionItem[] }
   | { type: 'SET_SEARCH_QUERY'; payload: string }
   | { type: 'SET_SELECTED_CATEGORY'; payload: string }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null }
   | { type: 'ADD_TO_WATCHLIST'; payload: string }
-  | { type: 'REMOVE_FROM_WATCHLIST'; payload: string };
+  | { type: 'REMOVE_FROM_WATCHLIST'; payload: string }
+  | { type: 'UPDATE_WALLET_BALANCE'; payload: number }
+  | { type: 'ADD_TRANSACTION'; payload: Transaction }
+  | { type: 'ADD_PAYMENT_METHOD'; payload: PaymentMethod }
+  | { type: 'REMOVE_PAYMENT_METHOD'; payload: string };
 
 const initialState: AppState = {
-  user: { notifications: [], wallet: { balance: 0 } },
+  user: undefined,
   watchlist: [],
   auctions: [],
   searchQuery: '',
@@ -37,6 +40,10 @@ const initialState: AppState = {
 
 const appReducer = (state: AppState, action: AppAction): AppState => {
   switch (action.type) {
+    case 'SET_USER':
+      return { ...state, user: action.payload };
+    case 'UPDATE_USER':
+      return { ...state, user: state.user ? { ...state.user, ...action.payload } : undefined };
     case 'SET_AUCTIONS':
       return { ...state, auctions: action.payload };
     case 'SET_SEARCH_QUERY':
@@ -51,6 +58,50 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
       return { ...state, watchlist: [...state.watchlist, state.auctions.find(a => a.id === action.payload)!] };
     case 'REMOVE_FROM_WATCHLIST':
       return { ...state, watchlist: state.watchlist.filter(a => a.id !== action.payload) };
+    case 'UPDATE_WALLET_BALANCE':
+      return {
+        ...state,
+        user: state.user ? {
+          ...state.user,
+          wallet: {
+            ...state.user.wallet,
+            balance: action.payload
+          }
+        } : undefined
+      };
+    case 'ADD_TRANSACTION':
+      return {
+        ...state,
+        user: state.user ? {
+          ...state.user,
+          wallet: {
+            ...state.user.wallet,
+            transactions: [action.payload, ...state.user.wallet.transactions]
+          }
+        } : undefined
+      };
+    case 'ADD_PAYMENT_METHOD':
+      return {
+        ...state,
+        user: state.user ? {
+          ...state.user,
+          wallet: {
+            ...state.user.wallet,
+            paymentMethods: [...state.user.wallet.paymentMethods, action.payload]
+          }
+        } : undefined
+      };
+    case 'REMOVE_PAYMENT_METHOD':
+      return {
+        ...state,
+        user: state.user ? {
+          ...state.user,
+          wallet: {
+            ...state.user.wallet,
+            paymentMethods: state.user.wallet.paymentMethods.filter(pm => pm.id !== action.payload)
+          }
+        } : undefined
+      };
     default:
       return state;
   }
@@ -87,8 +138,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
+  const fetchUser = async () => {
+    try {
+      const response = await userAPI.getCurrentUser();
+      dispatch({ type: 'SET_USER', payload: response.data.data });
+    } catch (error) {
+      console.error('Failed to fetch user:', error);
+    }
+  };
+
   useEffect(() => {
     fetchAuctions();
+    fetchUser();
   }, []);
 
   return (
