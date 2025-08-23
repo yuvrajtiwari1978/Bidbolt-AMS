@@ -11,6 +11,7 @@ interface AppState {
   selectedCategory: string;
   loading: boolean;
   error: string | null;
+  isAuthenticated: boolean;
 }
 
 type AppAction =
@@ -26,7 +27,9 @@ type AppAction =
   | { type: 'UPDATE_WALLET_BALANCE'; payload: number }
   | { type: 'ADD_TRANSACTION'; payload: Transaction }
   | { type: 'ADD_PAYMENT_METHOD'; payload: PaymentMethod }
-  | { type: 'REMOVE_PAYMENT_METHOD'; payload: string };
+  | { type: 'REMOVE_PAYMENT_METHOD'; payload: string }
+  | { type: 'SET_AUTHENTICATED'; payload: boolean }
+  | { type: 'LOGOUT' };
 
 const initialState: AppState = {
   user: undefined,
@@ -36,12 +39,13 @@ const initialState: AppState = {
   selectedCategory: '',
   loading: false,
   error: null,
+  isAuthenticated: false,
 };
 
 const appReducer = (state: AppState, action: AppAction): AppState => {
   switch (action.type) {
     case 'SET_USER':
-      return { ...state, user: action.payload };
+      return { ...state, user: action.payload, isAuthenticated: true };
     case 'UPDATE_USER':
       return { ...state, user: state.user ? { ...state.user, ...action.payload } : undefined };
     case 'SET_AUCTIONS':
@@ -102,6 +106,16 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
           }
         } : undefined
       };
+    case 'SET_AUTHENTICATED':
+      return { ...state, isAuthenticated: action.payload };
+    case 'LOGOUT':
+      localStorage.removeItem('token');
+      return {
+        ...state,
+        user: undefined,
+        isAuthenticated: false,
+        watchlist: [],
+      };
     default:
       return state;
   }
@@ -110,6 +124,7 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
 const AppContext = createContext<{
   state: AppState;
   dispatch: React.Dispatch<AppAction>;
+  logout: () => void;
 } | null>(null);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -144,16 +159,39 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       dispatch({ type: 'SET_USER', payload: response.data.data });
     } catch (error) {
       console.error('Failed to fetch user:', error);
+      // If token is invalid, clear it
+      localStorage.removeItem('token');
+      dispatch({ type: 'SET_AUTHENTICATED', payload: false });
     }
   };
 
+  const logout = () => {
+    dispatch({ type: 'LOGOUT' });
+    toast.success('Logged out successfully');
+  };
+
+  // Check for existing token on app startup
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      // Verify token is valid by fetching user data
+      fetchUser();
+    }
+    
     fetchAuctions();
-    fetchUser();
+  }, []);
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      // Verify token is valid by fetching user data
+      fetchUser();
+    }
+    
+    fetchAuctions();
   }, []);
 
   return (
-    <AppContext.Provider value={{ state, dispatch }}>
+    <AppContext.Provider value={{ state, dispatch, logout }}>
       {children}
     </AppContext.Provider>
   );

@@ -5,9 +5,9 @@ import ApiResponse from '../utils/ApiResponse.js';
 export const getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select('-password');
-    res.json(ApiResponse.success(users, 'Users retrieved successfully'));
+    ApiResponse.success(res, users, 'Users retrieved successfully');
   } catch (error) {
-    res.status(500).json(ApiResponse.error(error.message));
+    ApiResponse.error(res, error.message);
   }
 };
 
@@ -17,12 +17,12 @@ export const getUserById = async (req, res) => {
     const user = await User.findById(req.params.id).select('-password');
     
     if (!user) {
-      return res.status(404).json(ApiResponse.error('User not found'));
+      return ApiResponse.notFound(res, 'User not found');
     }
     
-    res.json(ApiResponse.success(user, 'User retrieved successfully'));
+    ApiResponse.success(res, user, 'User retrieved successfully');
   } catch (error) {
-    res.status(500).json(ApiResponse.error(error.message));
+    ApiResponse.error(res, error.message);
   }
 };
 
@@ -37,9 +37,7 @@ export const createUser = async (req, res) => {
     });
     
     if (existingUser) {
-      return res.status(400).json(
-        ApiResponse.error('User with this email or username already exists')
-      );
+      return ApiResponse.error(res, 'User with this email or username already exists', 400);
     }
     
     const user = new User({
@@ -53,13 +51,13 @@ export const createUser = async (req, res) => {
     await user.save();
     
     const userResponse = user.toJSON();
-    res.status(201).json(ApiResponse.success(userResponse, 'User created successfully'));
+    ApiResponse.created(res, userResponse, 'User created successfully');
   } catch (error) {
     if (error.name === 'ValidationError') {
       const errors = Object.values(error.errors).map(err => err.message);
-      return res.status(400).json(ApiResponse.error(errors.join(', ')));
+      return ApiResponse.validationError(res, errors.join(', '));
     }
-    res.status(500).json(ApiResponse.error(error.message));
+    ApiResponse.error(res, error.message);
   }
 };
 
@@ -71,7 +69,7 @@ export const updateUser = async (req, res) => {
     const user = await User.findById(req.params.id);
     
     if (!user) {
-      return res.status(404).json(ApiResponse.error('User not found'));
+      return ApiResponse.notFound(res, 'User not found');
     }
     
     // Update fields
@@ -88,13 +86,13 @@ export const updateUser = async (req, res) => {
     
     await user.save();
     
-    res.json(ApiResponse.success(user, 'User updated successfully'));
+    ApiResponse.success(res, user, 'User updated successfully');
   } catch (error) {
     if (error.name === 'ValidationError') {
       const errors = Object.values(error.errors).map(err => err.message);
-      return res.status(400).json(ApiResponse.error(errors.join(', ')));
+      return ApiResponse.validationError(res, errors.join(', '));
     }
-    res.status(500).json(ApiResponse.error(error.message));
+    ApiResponse.error(res, error.message);
   }
 };
 
@@ -104,12 +102,12 @@ export const deleteUser = async (req, res) => {
     const user = await User.findByIdAndDelete(req.params.id);
     
     if (!user) {
-      return res.status(404).json(ApiResponse.error('User not found'));
+      return ApiResponse.notFound(res, 'User not found');
     }
     
-    res.json(ApiResponse.success(null, 'User deleted successfully'));
+    ApiResponse.success(res, null, 'User deleted successfully');
   } catch (error) {
-    res.status(500).json(ApiResponse.error(error.message));
+    ApiResponse.error(res, error.message);
   }
 };
 
@@ -119,11 +117,11 @@ export const getCurrentUser = async (req, res) => {
     const user = await User.findById(req.user.id).select('-password');
     
     if (!user) {
-      return res.status(404).json(ApiResponse.error('User not found'));
+      return ApiResponse.notFound(res, 'User not found');
     }
     
-    res.json(ApiResponse.success(user, 'Current user retrieved successfully'));
+    ApiResponse.success(res, user, 'Current user retrieved successfully');
   } catch (error) {
-    res.status(500).json(ApiResponse.error(error.message));
+    ApiResponse.error(res, error.message);
   }
 };

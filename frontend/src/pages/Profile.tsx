@@ -1,11 +1,21 @@
-import React, { useState } from 'react';
-import { User, Star, Calendar, Package, Heart, MessageCircle, Settings, Edit3, Trophy, TrendingUp } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { User, Star, Calendar, Package, Heart, MessageCircle, Settings, Edit3, Trophy, TrendingUp, LogOut, Award } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import LoginButton from '../components/LoginButton';
+import toast from 'react-hot-toast';
 
 const Profile: React.FC = () => {
-  const { state } = useApp();
+  const { state, logout } = useApp();
   const [activeTab, setActiveTab] = useState('overview');
+
+  useEffect(() => {
+    // No need to set userBids or loading state anymore
+  }, [state.user]);
+
+  const handleSignOut = () => {
+    logout();
+    toast.success('Signed out successfully');
+  };
 
   if (!state.user) {
     return (
@@ -28,11 +38,28 @@ const Profile: React.FC = () => {
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
+  // Calculate real stats from user data
   const stats = [
-    { label: 'Auctions Won', value: '23', icon: Trophy },
-    { label: 'Items Sold', value: '45', icon: Package },
-    { label: 'Total Bids', value: '156', icon: TrendingUp },
-    { label: 'Feedback Score', value: '98.5%', icon: Star }
+    { 
+      label: 'Auctions Won', 
+      value: state.user.purchasedItems?.length?.toString() || '0', 
+      icon: Award 
+    },
+    { 
+      label: 'Items Sold', 
+      value: state.user.sellingItems?.length?.toString() || '0', 
+      icon: Package 
+    },
+    { 
+      label: 'Total Bids', 
+      value: state.user.bidHistory?.length?.toString() || '0', 
+      icon: TrendingUp 
+    },
+    { 
+      label: 'Feedback Score', 
+      value: `${state.user.rating?.toFixed(1) || '5.0'}`, 
+      icon: Star 
+    }
   ];
 
   return (
@@ -79,6 +106,17 @@ const Profile: React.FC = () => {
                     <p className="text-white/60 text-sm">{stat.label}</p>
                   </div>
                 ))}
+              </div>
+
+              {/* Sign Out Button */}
+              <div className="mt-6">
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center space-x-2 px-6 py-3 bg-red-500/20 border border-red-400/30 rounded-xl text-red-300 hover:bg-red-500/30 hover:text-white transition-all duration-300"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span>Sign Out</span>
+                </button>
               </div>
             </div>
           </div>
@@ -192,7 +230,7 @@ const Profile: React.FC = () => {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {state.auctions
-                    .filter(auction => state.watchlist.includes(auction.id))
+                    .filter(auction => state.watchlist.some(item => item.id === auction.id))
                     .map(auction => (
                       <div key={auction.id} className="relative backdrop-blur-xl bg-white/5 rounded-2xl overflow-hidden border border-white/10">
                         <img
@@ -203,7 +241,7 @@ const Profile: React.FC = () => {
                         <div className="p-4">
                           <h3 className="text-white font-semibold mb-2">{auction.title}</h3>
                           <p className="text-white/60 text-sm mb-2">{auction.timeLeft} left</p>
-                          <p className="text-white font-bold">${auction.currentBid.toLocaleString()}</p>
+                          <p className="text-white font-bold">${Number(auction.currentBid).toLocaleString()}</p>
                         </div>
                       </div>
                     ))}

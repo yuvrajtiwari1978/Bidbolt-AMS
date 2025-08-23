@@ -14,13 +14,13 @@ export const adminLogin = async (req, res) => {
     const { email, password } = req.body;
     
     if (email !== 'yuvrajtiwari1978@gmail.com' || password !== '88888888') {
-      return res.status(401).json(ApiResponse.error('Invalid admin credentials'));
+      return ApiResponse.unauthorized(res, 'Invalid admin credentials');
     }
     
     const token = generateToken('admin');
-    res.json(ApiResponse.success({ token, email }, 'Admin login successful'));
+    ApiResponse.success(res, { token, email }, 'Admin login successful');
   } catch (error) {
-    res.status(500).json(ApiResponse.error(error.message));
+    ApiResponse.serverError(res, error.message);
   }
 };
 
@@ -31,18 +31,18 @@ export const login = async (req, res) => {
     
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json(ApiResponse.error('Invalid credentials'));
+      return ApiResponse.unauthorized(res, 'Invalid credentials');
     }
     
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(401).json(ApiResponse.error('Invalid credentials'));
+      return ApiResponse.unauthorized(res, 'Invalid credentials');
     }
     
     const token = generateToken(user._id);
-    res.json(ApiResponse.success({ token, user: user.toJSON() }, 'Login successful'));
+    ApiResponse.success(res, { token, user: user.toJSON() }, 'Login successful');
   } catch (error) {
-    res.status(500).json(ApiResponse.error(error.message));
+    ApiResponse.serverError(res, error.message);
   }
 };
 
@@ -56,9 +56,7 @@ export const register = async (req, res) => {
     });
     
     if (existingUser) {
-      return res.status(400).json(
-        ApiResponse.error('User with this email or username already exists')
-      );
+      return ApiResponse.conflict(res, 'User with this email or username already exists');
     }
     
     const user = new User({
@@ -72,13 +70,13 @@ export const register = async (req, res) => {
     await user.save();
     
     const token = generateToken(user._id);
-    res.status(201).json(ApiResponse.success({ token, user: user.toJSON() }, 'Registration successful'));
+    ApiResponse.created(res, { token, user: user.toJSON() }, 'Registration successful');
   } catch (error) {
     if (error.name === 'ValidationError') {
       const errors = Object.values(error.errors).map(err => err.message);
-      return res.status(400).json(ApiResponse.error(errors.join(', ')));
+      return ApiResponse.validationError(res, errors);
     }
-    res.status(500).json(ApiResponse.error(error.message));
+    ApiResponse.serverError(res, error.message);
   }
 };
 
@@ -86,8 +84,8 @@ export const register = async (req, res) => {
 export const getCurrentUser = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
-    res.json(ApiResponse.success(user, 'Current user retrieved successfully'));
+    ApiResponse.success(res, user, 'Current user retrieved successfully');
   } catch (error) {
-    res.status(500).json(ApiResponse.error(error.message));
+    ApiResponse.serverError(res, error.message);
   }
 };
