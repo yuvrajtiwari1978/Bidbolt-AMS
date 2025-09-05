@@ -20,15 +20,15 @@ export const getWallet = async (req, res) => {
 export const depositFunds = async (req, res) => {
   try {
     const { amount, paymentMethodId } = req.body;
-    
+
     if (!amount || amount <= 0) {
-      return res.status(400).json(ApiResponse.error('Invalid deposit amount'));
+      return ApiResponse.badRequest(res, 'Invalid deposit amount');
     }
 
     const user = await User.findById(req.user.id);
-    
+
     if (!user) {
-      return res.status(404).json(ApiResponse.error('User not found'));
+      return ApiResponse.notFound(res, 'User not found');
     }
 
     // Create transaction
@@ -36,7 +36,7 @@ export const depositFunds = async (req, res) => {
       id: `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       type: 'deposit',
       amount: amount,
-      description: `Wallet deposit via ${paymentMethodId || 'payment method'}`,
+      description: `Wallet deposit ${paymentMethodId ? `via ${paymentMethodId}` : 'via direct deposit'}`,
       timestamp: new Date(),
       status: 'completed'
     };
@@ -44,13 +44,13 @@ export const depositFunds = async (req, res) => {
     // Update wallet
     user.wallet.balance += amount;
     user.wallet.transactions.unshift(transaction);
-    
+
     await user.save();
 
-    res.json(ApiResponse.success({
+    return ApiResponse.success(res, {
       balance: user.wallet.balance,
       transaction
-    }, 'Funds deposited successfully'));
+    }, 'Funds deposited successfully');
   } catch (error) {
     res.status(500).json(ApiResponse.error(error.message));
   }
@@ -62,17 +62,17 @@ export const withdrawFunds = async (req, res) => {
     const { amount, paymentMethodId } = req.body;
     
     if (!amount || amount <= 0) {
-      return res.status(400).json(ApiResponse.error('Invalid withdrawal amount'));
+      return ApiResponse.badRequest(res, 'Invalid withdrawal amount');
     }
 
     const user = await User.findById(req.user.id);
     
     if (!user) {
-      return res.status(404).json(ApiResponse.error('User not found'));
+      return ApiResponse.notFound(res, 'User not found');
     }
 
     if (user.wallet.balance < amount) {
-      return res.status(400).json(ApiResponse.error('Insufficient balance'));
+      return ApiResponse.badRequest(res, 'Insufficient balance');
     }
 
     // Create transaction

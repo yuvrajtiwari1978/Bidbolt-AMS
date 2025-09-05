@@ -76,6 +76,12 @@ auction-platform/
 
 3. Create a `.env` file based on `.env.example`:
    ```bash
+   # Option 1: Use the setup script (recommended)
+   ../setup-env.bat  # Windows
+   # or
+   ../setup-env.sh   # Linux/Mac
+   
+   # Option 2: Manual setup
    cp .env.example .env
    ```
 
@@ -146,18 +152,32 @@ npm test
 
 ## 📝 Environment Variables
 
-### Backend (.env)
-```
-PORT=5000
-MONGODB_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret_key
-NODE_ENV=development
-```
+### Backend (.env.example)
+1. Create a `.env` file based on `.env.example`:
+   ```bash
+   cp .env.example .env
+   ```
+2. Update the `.env` file with your MongoDB connection string and other configurations:
+   ```
+   MONGODB_URI=mongodb://localhost:27017/bidbolt
+   JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+   JWT_EXPIRE=7d
+   PORT=5000
+   NODE_ENV=development
+   FRONTEND_URL=http://localhost:5173
+   ```
 
-### Frontend (.env)
-```
-VITE_API_URL=http://localhost:5000/api
-```
+### Frontend (.env.example)
+1. Create a `.env` file based on `.env.example`:
+   ```bash
+   cp .env.example .env
+   ```
+2. Update the `.env` file with your API base URL and other configurations:
+   ```
+   VITE_API_URL=http://localhost:5000/api/v1
+   VITE_APP_NAME=BidBolt
+   VITE_APP_VERSION=1.0.0
+   ```
 
 ## 🤝 Contributing
 

@@ -31,7 +31,7 @@ export const rateLimiter = (windowMs = 15 * 60 * 1000, max = 100) => {
 };
 
 // Stricter rate limit for authentication endpoints
-export const authRateLimiter = rateLimiter(15 * 60 * 1000, 5); // 5 requests per 15 minutes
+export const authRateLimiter = rateLimiter(15 * 60 * 1000, 20); // Increased to 20 requests per 15 minutes for testing
 
 // General rate limit for API endpoints
 export const apiRateLimiter = rateLimiter(15 * 60 * 1000, 100); // 100 requests per 15 minutes

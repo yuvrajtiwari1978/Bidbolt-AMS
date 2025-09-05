@@ -3,14 +3,32 @@ import { User, Star, Calendar, Package, Heart, MessageCircle, Settings, Edit3, T
 import { useApp } from '../context/AppContext';
 import LoginButton from '../components/LoginButton';
 import toast from 'react-hot-toast';
+import { userAPI } from '../services/api';
 
 const Profile: React.FC = () => {
-  const { state, logout } = useApp();
+  const { state, logout, dispatch } = useApp();
   const [activeTab, setActiveTab] = useState('overview');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // No need to set userBids or loading state anymore
+    // Fetch user data if not already loaded
+    if (state.user && !state.user.bidHistory) {
+      fetchUserData();
+    }
   }, [state.user]);
+
+  const fetchUserData = async () => {
+    setLoading(true);
+    try {
+      const response = await userAPI.getCurrentUser();
+      dispatch({ type: 'SET_USER', payload: response.data.data });
+    } catch (error) {
+      console.error('Failed to fetch user data:', error);
+      toast.error('Failed to load profile data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSignOut = () => {
     logout();
@@ -92,7 +110,7 @@ const Profile: React.FC = () => {
                 </div>
                 <div className="flex items-center space-x-2 text-white/60">
                   <Calendar className="w-4 h-4" />
-                  <span>Joined {state.user.joinDate.toLocaleDateString()}</span>
+<span>Joined {state.user.joinDate ? new Date(state.user.joinDate).toLocaleDateString() : 'N/A'}</span>
                 </div>
               </div>
 

@@ -28,20 +28,30 @@ export const adminLogin = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    
+
+    console.log('Login attempt for email:', email);
+
     const user = await User.findOne({ email });
     if (!user) {
+      console.log('User not found for email:', email);
       return ApiResponse.unauthorized(res, 'Invalid credentials');
     }
-    
+
+    console.log('User found:', user.email);
+    console.log('Stored password hash:', user.password);
+
     const isMatch = await user.comparePassword(password);
+    console.log('Password match result:', isMatch);
+
     if (!isMatch) {
+      console.log('Password does not match for user:', email);
       return ApiResponse.unauthorized(res, 'Invalid credentials');
     }
-    
+
     const token = generateToken(user._id);
     ApiResponse.success(res, { token, user: user.toJSON() }, 'Login successful');
   } catch (error) {
+    console.error('Login error:', error);
     ApiResponse.serverError(res, error.message);
   }
 };

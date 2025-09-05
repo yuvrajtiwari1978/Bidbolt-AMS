@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CreditCard, Plus, Minus, ArrowUpRight, ArrowDownLeft, Clock, CheckCircle, XCircle, Wallet as WalletIcon, TrendingUp, DollarSign } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import toast from 'react-hot-toast';
@@ -12,6 +12,7 @@ const Wallet: React.FC = () => {
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [graphBase64, setGraphBase64] = useState<string | null>(null);
 
   if (!state.user) {
     return (
@@ -25,16 +26,45 @@ const Wallet: React.FC = () => {
     );
   }
 
+  if (!state.user.wallet) {
+    return (
+      <div className="px-6">
+        <div className="max-w-4xl mx-auto text-center py-16">
+          <h2 className="text-2xl font-bold text-white mb-4">Wallet data is not available</h2>
+          <p className="text-white/60 mb-6">Please try refreshing or contact support if the issue persists.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const fetchGraph = async () => {
+    try {
+      const response = await walletAPI.walletVisualization(state.user.wallet.transactions);
+      if (response.data.success) {
+        setGraphBase64(response.data.graph_base64);
+      } else {
+        toast.error('Failed to load wallet graph');
+      }
+    } catch (error) {
+      console.error('Error fetching wallet graph:', error);
+      toast.error('Error fetching wallet graph');
+    }
+  };
+
+  useEffect(() => {
+    fetchGraph();
+  }, [state.user.wallet.transactions]);
+
   const handleDeposit = async () => {
     const amount = parseFloat(depositAmount);
     if (amount > 0) {
       try {
         const response = await walletAPI.depositFunds(amount);
         const { balance, transaction } = response.data.data;
-        
+
         dispatch({ type: 'UPDATE_WALLET_BALANCE', payload: balance });
         dispatch({ type: 'ADD_TRANSACTION', payload: transaction });
-        
+
         setDepositAmount('');
         setShowDepositModal(false);
         toast.success(`₹${amount} deposited successfully!`);
@@ -51,10 +81,10 @@ const Wallet: React.FC = () => {
       try {
         const response = await walletAPI.withdrawFunds(amount);
         const { balance, transaction } = response.data.data;
-        
+
         dispatch({ type: 'UPDATE_WALLET_BALANCE', payload: balance });
         dispatch({ type: 'ADD_TRANSACTION', payload: transaction });
-        
+
         setWithdrawAmount('');
         setShowWithdrawModal(false);
         toast.success(`₹${amount} withdrawal initiated!`);
@@ -156,7 +186,7 @@ const Wallet: React.FC = () => {
                 <span className="text-white">Add Funds</span>
               </div>
             </button>
-            
+
             <button
               onClick={() => setShowWithdrawModal(true)}
               className="relative group flex-1 py-4 px-6 rounded-2xl font-semibold transition-all duration-300"
@@ -205,7 +235,7 @@ const Wallet: React.FC = () => {
                         </div>
                         <div className="flex-1">
                           <p className="text-white font-medium">{transaction.description}</p>
-                          <p className="text-white/60 text-sm">{transaction.timestamp.toLocaleDateString()}</p>
+                          <p className="text-white/60 text-sm">{new Date(transaction.timestamp).toLocaleDateString()}</p>
                         </div>
                         <div className="text-right">
                           <p className={`font-semibold ${transaction.amount > 0 ? 'text-green-400' : 'text-red-400'}`}>
@@ -220,7 +250,7 @@ const Wallet: React.FC = () => {
                     ))}
                   </div>
                 </div>
-                
+
                 <div>
                   <h3 className="text-white font-semibold mb-4">Payment Methods</h3>
                   <div className="space-y-3">
@@ -303,6 +333,16 @@ const Wallet: React.FC = () => {
                 </button>
               </div>
             </div>
+          )}
+        </div>
+
+        {/* Wallet Balance Graph */}
+        <div className="relative backdrop-blur-xl bg-white/5 rounded-3xl p-8 border border-white/10 mb-8">
+          <h2 className="text-2xl font-bold text-white mb-6">Wallet Balance Over Time</h2>
+          {graphBase64 ? (
+            <img src={`data:image/png;base64,${graphBase64}`} alt="Wallet Balance Graph" className="w-full h-auto rounded-lg" />
+          ) : (
+            <p className="text-white/60">Loading graph...</p>
           )}
         </div>
 

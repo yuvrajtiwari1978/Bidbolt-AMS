@@ -21,12 +21,25 @@ const LoginButton: React.FC<LoginButtonProps> = ({
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const sizeClasses = {
+    sm: 'px-3 py-1.5 text-sm',
+    md: 'px-4 py-2',
+    lg: 'px-6 py-3 text-lg'
+  };
+
+  const variantClasses = {
+    primary: 'bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600',
+    secondary: 'bg-white/10 border border-white/20 hover:bg-white/20'
+  };
+
+      const handleLogin = async (e: React.FormEvent) => {
+        console.log('Attempting to log in with:', { email, password }); // Log email and password
     e.preventDefault();
     setIsLoading(true);
     
     try {
       const response = await authAPI.login({ email, password });
+      console.log('API Response:', response); // Log API response
       const { token, user } = response.data.data;
       
       // Store token in localStorage
@@ -41,6 +54,9 @@ const LoginButton: React.FC<LoginButtonProps> = ({
       setPassword('');
       
       toast.success('Login successful!');
+      
+      // Redirect to profile page after successful login
+      navigate('/profile');
     } catch (error: unknown) {
       console.error('Login failed:', error);
       const errorMessage = (error as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Login failed. Please try again.';
@@ -50,21 +66,14 @@ const LoginButton: React.FC<LoginButtonProps> = ({
     }
   };
 
-  const sizeClasses = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2',
-    lg: 'px-6 py-3 text-lg'
-  };
-
-  const variantClasses = {
-    primary: 'bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600',
-    secondary: 'bg-white/10 border border-white/20 hover:bg-white/20'
-  };
-
   return (
     <>
       <button
-        onClick={() => setShowLoginModal(true)}
+        onClick={() => {
+          console.log('Login button clicked'); // Log button click
+          console.log('Opening login modal'); // Log modal opening
+          setShowLoginModal(true);
+        }}
         className={`relative group rounded-xl font-semibold transition-all duration-300 ${sizeClasses[size]} ${variantClasses[variant]}`}
       >
         {variant === 'primary' && (
@@ -100,7 +109,10 @@ const LoginButton: React.FC<LoginButtonProps> = ({
                   <input
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      console.log('Email updated:', e.target.value); // Log email value
+                    }}
                     className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400/50"
                     placeholder="Enter your email"
                     required

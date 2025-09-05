@@ -7,6 +7,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
 
 // Add token to requests if available
@@ -22,19 +23,19 @@ api.interceptors.request.use((config) => {
 export const userAPI = {
   // Get all users
   getAllUsers: () => api.get('/users'),
-  
+
   // Get user by ID
   getUserById: (id: string) => api.get(`/users/${id}`),
-  
+
   // Create new user
   createUser: (userData: Record<string, unknown>) => api.post('/users', userData),
-  
+
   // Update user
   updateUser: (id: string, userData: Record<string, unknown>) => api.put(`/users/${id}`, userData),
-  
+
   // Delete user
   deleteUser: (id: string) => api.delete(`/users/${id}`),
-  
+
   // Get current user profile
   getCurrentUser: () => api.get('/users/profile'),
 };
@@ -43,10 +44,10 @@ export const userAPI = {
 export const authAPI = {
   // Register new user
   register: (userData: Record<string, unknown>) => api.post('/auth/register', userData),
-  
+
   // Login user
   login: (credentials: Record<string, unknown>) => api.post('/auth/login', credentials),
-  
+
   // Logout user
   logout: () => api.post('/auth/logout'),
 };
@@ -75,7 +76,7 @@ export const auctionAPI = {
   getEndingSoonAuctions: () => api.get('/auctions/ending-soon'),
 
   // Get auctions by category
-  getAuctionsByCategory: (category: string, params?: { page?: number; limit?: number }) => 
+  getAuctionsByCategory: (category: string, params?: { page?: number; limit?: number }) =>
     api.get(`/auctions/category/${category}`, { params }),
 
   // Get related auctions
@@ -86,36 +87,40 @@ export const auctionAPI = {
 export const walletAPI = {
   // Get wallet details
   getWallet: () => api.get('/wallet'),
-  
+
   // Deposit funds
-  depositFunds: (amount: number, paymentMethodId?: string) => 
+  depositFunds: (amount: number, paymentMethodId?: string) =>
     api.post('/wallet/deposit', { amount, paymentMethodId }),
-  
+
   // Withdraw funds
-  withdrawFunds: (amount: number, paymentMethodId?: string) => 
+  withdrawFunds: (amount: number, paymentMethodId?: string) =>
     api.post('/wallet/withdraw', { amount, paymentMethodId }),
-  
+
   // Get transaction history
   getTransactions: (params?: {
     page?: number;
     limit?: number;
     type?: string;
   }) => api.get('/wallet/transactions', { params }),
-  
+
   // Add payment method
   addPaymentMethod: (paymentMethod: {
     type: string;
     last4: string;
     brand?: string;
   }) => api.post('/wallet/payment-methods', paymentMethod),
-  
+
   // Remove payment method
-  removePaymentMethod: (paymentMethodId: string) => 
+  removePaymentMethod: (paymentMethodId: string) =>
     api.delete(`/wallet/payment-methods/${paymentMethodId}`),
-  
+
   // Set default payment method
-  setDefaultPaymentMethod: (paymentMethodId: string) => 
+  setDefaultPaymentMethod: (paymentMethodId: string) =>
     api.put('/wallet/payment-methods/default', { paymentMethodId }),
+
+  // Wallet balance visualization
+  walletVisualization: (transactions: any[]) =>
+    api.post('/python/wallet-visualization', { transactions }),
 };
 
 export default api;

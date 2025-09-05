@@ -8,7 +8,7 @@ import Explore from './pages/Explore';
 import AuctionDetail from './pages/AuctionDetail';
 import Create from './pages/Create';
 import Profile from './pages/Profile';
-import Wallet from './pages/Wallet';
+import Wallet from './pages/Wallet_new';
 import Watchlist from './pages/Watchlist';
 import Notifications from './pages/Notifications';
 import Settings from './pages/Settings';

@@ -1,17 +1,18 @@
-// API versioning structure
 import express from 'express';
 import userRoutes from './userRoutes.js';
 import authRoutes from './authRoutes.js';
 import auctionRoutes from './auctionRoutes.js';
+import walletRoutes from './walletRoutes.js';
+import pythonRoutes from './pythonRoutes.js';
 
 const router = express.Router();
 
-// API v1 routes
 router.use('/v1/users', userRoutes);
 router.use('/v1/auth', authRoutes);
 router.use('/v1/auctions', auctionRoutes);
+router.use('/v1/wallet', walletRoutes);
+router.use('/v1/python', pythonRoutes);
 
-// API documentation endpoint
 router.get('/v1', (req, res) => {
   res.json({
     success: true,
@@ -38,6 +39,11 @@ router.get('/v1', (req, res) => {
         'GET /api/v1/auctions/category/:category': 'Get auctions by category',
         'GET /api/v1/auctions/related/:auctionId': 'Get related auctions',
         'GET /api/v1/auctions/:id': 'Get single auction details'
+      },
+      python: {
+        'POST /api/v1/python/predict-price': 'Predict auction price using ML model',
+        'GET /api/v1/python/analyze-data': 'Run data analysis on auction data',
+        'POST /api/v1/python/train-model': 'Train the price prediction model'
       }
     }
   });

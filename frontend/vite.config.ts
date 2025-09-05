@@ -12,4 +12,13 @@ export default defineConfig({
     assetsDir: 'assets',
     sourcemap: true,
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 });
